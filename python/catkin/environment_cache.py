@@ -85,10 +85,7 @@ def generate_environment_script(env_script):
             new_value = new_value[:-len(old_value)] + variable
             if _is_not_windows():
                 new_value = '"%s"' % new_value
-            _set_variable(code, key, new_value)
-        else:
-            _set_variable(code, key, new_value)
-
+        _set_variable(code, key, new_value)
     return code
 
 
@@ -107,17 +104,14 @@ def _append_header(code):
 
 
 def _append_comment(code, value):
-    if _is_not_windows():
-        comment_prefix = '#'
-    else:
-        comment_prefix = 'REM'
-    code.append('%s %s' % (comment_prefix, value))
+    comment_prefix = '#' if _is_not_windows() else 'REM'
+    code.append(f'{comment_prefix} {value}')
 
 
 def _set_variable(code, key, value):
     if _is_not_windows():
         if not value.startswith('"') or not value.endswith('"'):
             value = "'%s'" % value
-        code.append('export %s=%s' % (key, value))
+        code.append(f'export {key}={value}')
     else:
-        code.append('set %s=%s' % (key, value))
+        code.append(f'set {key}={value}')

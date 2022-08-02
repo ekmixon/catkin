@@ -83,7 +83,7 @@ def split_arguments(args, splitter_name, default=None):
     if splitter_name not in args:
         return args, default
     index = args.index(splitter_name)
-    return args[0:index], args[index + 1:]
+    return args[:index], args[index + 1:]
 
 
 def extract_cmake_and_make_arguments(args):
@@ -107,11 +107,7 @@ def _extract_cmake_and_make_arguments(args, extract_catkin_make):
     if extract_catkin_make:
         arg_types['--catkin-make-args'] = catkin_make_args
 
-    arg_indexes = {}
-    for k in arg_types.keys():
-        if k in args:
-            arg_indexes[args.index(k)] = k
-
+    arg_indexes = {args.index(k): k for k in arg_types if k in args}
     for index in reversed(sorted(arg_indexes.keys())):
         arg_type = arg_indexes[index]
         args, specific_args = split_arguments(args, arg_type)
@@ -235,8 +231,7 @@ def run_command(cmd, cwd, quiet=False, colorize=False, add_env=None):
             except Exception as e:
                 import traceback
                 traceback.print_exc()
-                print('<caktin_make> color formatting problem: ' + str(e),
-                      file=sys.stderr)
+                print(f'<caktin_make> color formatting problem: {str(e)}', file=sys.stderr)
             out.write(line)
     proc.wait()
     if proc.returncode:
@@ -262,9 +257,17 @@ def _check_build_dir(name, workspace, buildspace):
 
 def isolation_print_command(cmd, path=None, add_env=None):
     cprint(
-        blue_arrow + ' ' + sanitize(cmd) + '@|' +
-        (" @!@{kf}in@| '@!" + sanitize(path) + "@|'" if path else '') +
-        (" @!@{kf}with@| '@!" + ' '.join(['%s=%s' % (k, v) for k, v in add_env.items()]) + "@|'" if add_env else '')
+        (
+            f'{blue_arrow} {sanitize(cmd)}@|'
+            + (" @!@{kf}in@| '@!" + sanitize(path) + "@|'" if path else '')
+        )
+        + (
+            " @!@{kf}with@| '@!"
+            + ' '.join([f'{k}={v}' for k, v in add_env.items()])
+            + "@|'"
+            if add_env
+            else ''
+        )
     )
 
 
@@ -293,10 +296,13 @@ def get_python_install_dir():
     python_install_dir = 'lib'
     python_use_debian_layout = os.path.exists('/etc/debian_version')
     if os.name != 'nt':
-        python_version_xdoty = str(sys.version_info[0]) + '.' + str(sys.version_info[1])
+        python_version_xdoty = f'{str(sys.version_info[0])}.{str(sys.version_info[1])}'
         if python_use_debian_layout and sys.version_info[0] == 3:
             python_version_xdoty = str(sys.version_info[0])
-        python_install_dir = os.path.join(python_install_dir, 'python' + python_version_xdoty)
+        python_install_dir = os.path.join(
+            python_install_dir, f'python{python_version_xdoty}'
+        )
+
 
     python_packages_dir = 'dist-packages' if python_use_debian_layout else 'site-packages'
     python_install_dir = os.path.join(python_install_dir, python_packages_dir)
@@ -307,27 +313,25 @@ def handle_make_arguments(input_make_args, append_default_jobs_flags=True):
     make_args = list(input_make_args)
 
     # If no -j/--jobs/-l/--load-average flags are in make_args
-    if not extract_jobs_flags(' '.join(make_args)):
-        # If -j/--jobs/-l/--load-average are in MAKEFLAGS
-        if 'MAKEFLAGS' in os.environ and extract_jobs_flags(os.environ['MAKEFLAGS']):
-            # Do not extend make arguments, let MAKEFLAGS set things
-            pass
-        else:
-            # Else extend the make_arguments to include some jobs flags
-            # If ROS_PARALLEL_JOBS is set use those flags
-            if 'ROS_PARALLEL_JOBS' in os.environ:
-                # ROS_PARALLEL_JOBS is a set of make variables, not just a number
-                ros_parallel_jobs = os.environ['ROS_PARALLEL_JOBS']
-                make_args.extend(ros_parallel_jobs.split())
-            elif append_default_jobs_flags:
-                # Else Use the number of CPU cores
-                try:
-                    jobs = multiprocessing.cpu_count()
-                    make_args.append('-j{0}'.format(jobs))
-                    make_args.append('-l{0}'.format(jobs))
-                except NotImplementedError:
-                    # If the number of cores cannot be determined, do not extend args
-                    pass
+    if not extract_jobs_flags(' '.join(make_args)) and (
+        'MAKEFLAGS' not in os.environ
+        or not extract_jobs_flags(os.environ['MAKEFLAGS'])
+    ):
+        # Else extend the make_arguments to include some jobs flags
+        # If ROS_PARALLEL_JOBS is set use those flags
+        if 'ROS_PARALLEL_JOBS' in os.environ:
+            # ROS_PARALLEL_JOBS is a set of make variables, not just a number
+            ros_parallel_jobs = os.environ['ROS_PARALLEL_JOBS']
+            make_args.extend(ros_parallel_jobs.split())
+        elif append_default_jobs_flags:
+            # Else Use the number of CPU cores
+            try:
+                jobs = multiprocessing.cpu_count()
+                make_args.append('-j{0}'.format(jobs))
+                make_args.append('-l{0}'.format(jobs))
+            except NotImplementedError:
+                # If the number of cores cannot be determined, do not extend args
+                pass
     return make_args
 
 
@@ -357,15 +361,15 @@ def build_catkin_package(
     # Check last_env
     if last_env is not None:
         cprint(
-            blue_arrow + ' Building with env: ' +
-            "'{0}'".format(sanitize(last_env))
+            (
+                f'{blue_arrow} Building with env: '
+                + "'{0}'".format(sanitize(last_env))
+            )
         )
 
+
     # Check for Makefile and maybe call cmake
-    if not use_ninja:
-        makefile_name = 'Makefile'
-    else:
-        makefile_name = 'build.ninja'
+    makefile_name = 'build.ninja' if use_ninja else 'Makefile'
     makefile = os.path.join(build_dir, makefile_name)
     if not os.path.exists(makefile) or force_cmake:
         package_dir = os.path.dirname(package.filename)
@@ -388,9 +392,10 @@ def build_catkin_package(
         cmake_cmd = [
             'cmake',
             package_dir,
-            '-DCATKIN_DEVEL_PREFIX=' + develspace,
-            '-DCMAKE_INSTALL_PREFIX=' + installspace
+            f'-DCATKIN_DEVEL_PREFIX={develspace}',
+            f'-DCMAKE_INSTALL_PREFIX={installspace}',
         ]
+
         cmake_cmd.extend(cmake_args)
         add_env = get_additional_environment(install, destdir, installspace)
         isolation_print_command(' '.join(cmake_cmd), build_dir, add_env=add_env)
@@ -404,7 +409,7 @@ def build_catkin_package(
                 os.remove(makefile)
             raise
     else:
-        print('%s exists, skipping explicit cmake invocation...' % makefile_name)
+        print(f'{makefile_name} exists, skipping explicit cmake invocation...')
         # Check to see if cmake needs to be run via make
         if use_ninja:
             make_check_cmake_cmd = ['ninja', 'build.ninja']

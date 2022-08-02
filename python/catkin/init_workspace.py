@@ -122,9 +122,7 @@ def init_workspace(workspace_dir):
 
     # search for toplevel file in relative locations
     if src_file_path is None:
-        relative_cmake_paths = []
-        # when catkin is in source space
-        relative_cmake_paths.append(os.path.join('..', '..', 'cmake'))
+        relative_cmake_paths = [os.path.join('..', '..', 'cmake')]
         # when catkin is installed (with Python code in lib/pythonX.Y/[dist|site]-packages)
         relative_cmake_paths.append(os.path.join('..', '..', '..', '..', 'share', 'catkin', 'cmake'))
         # when catkin is installed (with Python code in lib/site-packages)

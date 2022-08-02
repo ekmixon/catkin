@@ -67,28 +67,28 @@ def _get_output(package):
     values.update(_get_dependency_values('DOC_DEPENDS', package.doc_depends))
 
     for url_type in ['website', 'bugtracker', 'repository']:
-        values['URL_%s' % url_type.upper()] = '"%s"' % (', '.join(
-            [str(u) for u in package.urls if u.type == url_type]))
+        values[f'URL_{url_type.upper()}'] = '"%s"' % (
+            ', '.join([str(u) for u in package.urls if u.type == url_type])
+        )
+
 
     deprecated = [e.content for e in package.exports if e.tagname == 'deprecated']
-    values['DEPRECATED'] = '"%s"' % ((deprecated[0] if deprecated[0] else 'TRUE') if deprecated else '')
+    values['DEPRECATED'] = '"%s"' % (deprecated[0] or 'TRUE' if deprecated else '')
 
-    output = []
-    output.append(r'set(_CATKIN_CURRENT_PACKAGE "%s")' % package.name)
-    for k, v in values.items():
-        output.append('set(%s_%s %s)' % (package.name, k, v))
+    output = [r'set(_CATKIN_CURRENT_PACKAGE "%s")' % package.name]
+    output.extend(f'set({package.name}_{k} {v})' for k, v in values.items())
     return output
 
 
 def _get_dependency_values(key, depends):
     values = OrderedDict()
     values[key] = ' '.join(['"%s"' % str(d) for d in depends])
+    comparisons = ['version_lt', 'version_lte', 'version_eq', 'version_gte', 'version_gt']
     for d in depends:
-        comparisons = ['version_lt', 'version_lte', 'version_eq', 'version_gte', 'version_gt']
         for comp in comparisons:
             value = getattr(d, comp, None)
             if value is not None:
-                values['%s_%s_%s' % (key, str(d), comp.upper())] = '"%s"' % value
+                values[f'{key}_{str(d)}_{comp.upper()}'] = '"%s"' % value
     return values
 
 

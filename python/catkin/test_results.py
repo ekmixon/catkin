@@ -93,7 +93,9 @@ def ensure_junit_result_exist(filename):
 
 
 def _get_missing_junit_result_filename(filename):
-    return os.path.join(os.path.dirname(filename), 'MISSING-%s' % os.path.basename(filename))
+    return os.path.join(
+        os.path.dirname(filename), f'MISSING-{os.path.basename(filename)}'
+    )
 
 
 def read_junit(filename):

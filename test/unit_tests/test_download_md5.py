@@ -22,7 +22,7 @@ class DowloadCheckMd5Test(unittest.TestCase):
             check_file = os.path.join(rootdir, 'checkfile')
             with open(src_file, 'w') as fhand:
                 fhand.write('foo')
-            download_md5('file://%s' % src_file, check_file)
+            download_md5(f'file://{src_file}', check_file)
             self.assertTrue(os.path.isfile(check_file))
         finally:
             shutil.rmtree(rootdir)

@@ -56,7 +56,7 @@ try:
     root = ElementTree(None, os.path.join('..', 'package.xml'))
     version = root.findtext('version')
     author_names = [a.text for a in root.findall('author')]
-    copyright = u'2010-%s, %s' % (time.strftime('%Y'), ', '.join(author_names))
+    copyright = f"2010-{time.strftime('%Y')}, {', '.join(author_names)}"
 except Exception as e:
     raise RuntimeError('Could not extract version and authors from package.xml:\n%s' % e)
 

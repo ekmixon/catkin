@@ -19,7 +19,7 @@ def main(argv=sys.argv[1:]):
 
     work_dir_msg = ' with working directory "%s"' % args.working_dir if args.working_dir is not None else ''
     cmds_msg = ''.join(['\n  %s' % cmd for cmd in args.command])
-    print('-- run_tests.py: execute commands%s%s' % (work_dir_msg, cmds_msg))
+    print(f'-- run_tests.py: execute commands{work_dir_msg}{cmds_msg}')
 
     rc = 0
     for cmd in args.command:
@@ -32,9 +32,7 @@ def main(argv=sys.argv[1:]):
     if not no_errors:
         rc = 1
 
-    if args.return_code:
-        return rc
-    return 0
+    return rc if args.return_code else 0
 
 
 if __name__ == '__main__':

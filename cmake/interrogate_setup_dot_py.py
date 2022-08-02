@@ -103,12 +103,16 @@ def generate_cmake_file(package_name, version, scripts, package_dir, pkgs, modul
     :param modules: [list of str] python modules
     :param setup_module: str, setuptools or distutils
     """
-    prefix = '%s_SETUP_PY' % package_name
+    prefix = f'{package_name}_SETUP_PY'
     result = []
     if setup_module:
         result.append(r'set(%s_SETUP_MODULE "%s")' % (prefix, setup_module))
-    result.append(r'set(%s_VERSION "%s")' % (prefix, version))
-    result.append(r'set(%s_SCRIPTS "%s")' % (prefix, ';'.join(scripts)))
+    result.extend(
+        (
+            r'set(%s_VERSION "%s")' % (prefix, version),
+            r'set(%s_SCRIPTS "%s")' % (prefix, ';'.join(scripts)),
+        )
+    )
 
     # Remove packages with '.' separators.
     #
@@ -134,17 +138,21 @@ def generate_cmake_file(package_name, version, scripts, package_dir, pkgs, modul
             root_location = os.path.dirname(root_location)
         if root_location != locations[root_name]:
             raise RuntimeError(
-                'catkin_export_python does not support setup.py files that combine across multiple directories: %s in %s, %s in %s' % (pkgname, location, root_name, locations[root_name]))
+                f'catkin_export_python does not support setup.py files that combine across multiple directories: {pkgname} in {location}, {root_name} in {locations[root_name]}'
+            )
+
 
     # If checks pass, remove all submodules
     pkgs = [p for p in pkgs if '.' not in p]
 
-    resolved_pkgs = []
-    for pkg in pkgs:
-        resolved_pkgs += [locations[pkg]]
-
-    result.append(r'set(%s_PACKAGES "%s")' % (prefix, ';'.join(pkgs)))
-    result.append(r'set(%s_PACKAGE_DIRS "%s")' % (prefix, ';'.join(resolved_pkgs).replace('\\', '/')))
+    resolved_pkgs = [locations[pkg] for pkg in pkgs]
+    result.extend(
+        (
+            r'set(%s_PACKAGES "%s")' % (prefix, ';'.join(pkgs)),
+            r'set(%s_PACKAGE_DIRS "%s")'
+            % (prefix, ';'.join(resolved_pkgs).replace('\\', '/')),
+        )
+    )
 
     # skip modules which collide with package names
     filtered_modules = []
@@ -157,8 +165,24 @@ def generate_cmake_file(package_name, version, scripts, package_dir, pkgs, modul
         filtered_modules.append(modname)
     module_locations = _get_locations(filtered_modules, package_dir)
 
-    result.append(r'set(%s_MODULES "%s")' % (prefix, ';'.join(['%s.py' % m.replace('.', '/') for m in filtered_modules])))
-    result.append(r'set(%s_MODULE_DIRS "%s")' % (prefix, ';'.join([module_locations[m] for m in filtered_modules]).replace('\\', '/')))
+    result.extend(
+        (
+            r'set(%s_MODULES "%s")'
+            % (
+                prefix,
+                ';'.join(
+                    [f"{m.replace('.', '/')}.py" for m in filtered_modules]
+                ),
+            ),
+            r'set(%s_MODULE_DIRS "%s")'
+            % (
+                prefix,
+                ';'.join(
+                    [module_locations[m] for m in filtered_modules]
+                ).replace('\\', '/'),
+            ),
+        )
+    )
 
     return result
 

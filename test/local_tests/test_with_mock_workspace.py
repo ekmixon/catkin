@@ -51,9 +51,9 @@ class MockTest(AbstractCatkinWorkspaceTest):
 
         self.cmake(CATKIN_WHITELIST_PACKAGES='nolangs',
                    CATKIN_DPKG_BUILDPACKAGE_FLAGS='-d;-S;-us;-uc')
-        self.assertTrue(os.path.exists(self.builddir + '/nolangs'))
-        self.assertFalse(os.path.exists(self.builddir + '/std_msgs'))
-        self.assertFalse(os.path.exists(self.builddir + '/genmsg'))
+        self.assertTrue(os.path.exists(f'{self.builddir}/nolangs'))
+        self.assertFalse(os.path.exists(f'{self.builddir}/std_msgs'))
+        self.assertFalse(os.path.exists(f'{self.builddir}/genmsg'))
         succeed(MAKE_CMD, cwd=self.builddir)
         self.assertTrue(os.path.exists(self.builddir +
                                        '/nolangs/bin/nolangs_exec'))
@@ -80,7 +80,7 @@ class MockTest(AbstractCatkinWorkspaceTest):
 
         out = self.cmake(CMAKE_PREFIX_PATH=self.installdir,
                          expect=fail)
-        print('failed as expected, out={}'.format(out))
+        print(f'failed as expected, out={out}')
 
         self.assertTrue(b"catkin_package() PROJECT_NAME is set to 'Project'" in out, out)
         # assert 'You must call project() with the same name before.' in out

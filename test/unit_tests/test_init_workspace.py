@@ -8,7 +8,8 @@ try:
     from catkin.init_workspace import init_workspace, _symlink_or_copy
 except ImportError as impe:
     raise ImportError(
-        'Please adjust your pythonpath before running this test: %s' % str(impe))
+        f'Please adjust your pythonpath before running this test: {str(impe)}'
+    )
 
 
 class InitWorkspaceTest(unittest.TestCase):

@@ -10,7 +10,8 @@ try:
     import catkin.workspace
 except ImportError as impe:
     raise ImportError(
-        'Please adjust your pythonpath before running this test: %s' % str(impe))
+        f'Please adjust your pythonpath before running this test: {str(impe)}'
+    )
 
 
 class WorkspaceTest(unittest.TestCase):

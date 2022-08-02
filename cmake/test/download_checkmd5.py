@@ -92,7 +92,7 @@ def download_md5(uri, dest):
             if e.errno != errno.EEXIST:
                 raise
 
-    sys.stdout.write('Downloading %s to %s...' % (uri, dest))
+    sys.stdout.write(f'Downloading {uri} to {dest}...')
     sys.stdout.flush()
     try:
         download_with_resume(uri, dest)
@@ -116,13 +116,13 @@ def checkmd5(dest, md5sum=None):
     with open(dest, 'rb') as f:
         md5value = hashlib.md5()
         while True:
-            buf = f.read(4096)
-            if not buf:
+            if buf := f.read(4096):
+                md5value.update(buf)
+            else:
                 break
-            md5value.update(buf)
     hexdigest = md5value.hexdigest()
 
-    print('Checking md5sum on %s' % (dest))
+    print(f'Checking md5sum on {dest}')
     return hexdigest == md5sum, hexdigest
 
 
@@ -137,7 +137,7 @@ def main(argv=sys.argv[1:]):
 
     uri = args.uri
     if '://' not in uri:
-        uri = 'file://' + uri
+        uri = f'file://{uri}'
 
     fresh = False
     if not os.path.exists(args.dest):
@@ -151,8 +151,11 @@ def main(argv=sys.argv[1:]):
 
     if args.md5sum:
         result, hexdigest = checkmd5(args.dest, args.md5sum)
-        if result is False and fresh is False:
-            print('WARNING: md5sum mismatch (%s != %s); re-downloading file %s' % (hexdigest, args.md5sum, args.dest))
+        if result is False and not fresh:
+            print(
+                f'WARNING: md5sum mismatch ({hexdigest} != {args.md5sum}); re-downloading file {args.dest}'
+            )
+
             os.remove(args.dest)
             try:
                 download_md5(uri, args.dest)
@@ -162,7 +165,8 @@ def main(argv=sys.argv[1:]):
                 raise
             result, hexdigest = checkmd5(args.dest, args.md5sum)
         if result is False:
-            return 'ERROR: md5sum mismatch (%s != %s) on %s; aborting' % (hexdigest, args.md5sum, args.dest)
+            return f'ERROR: md5sum mismatch ({hexdigest} != {args.md5sum}) on {args.dest}; aborting'
+
 
     return 0
 

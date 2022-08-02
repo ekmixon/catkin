@@ -11,7 +11,8 @@ try:
     from catkin.workspace import CATKIN_MARKER_FILE
 except ImportError as impe:
     raise ImportError(
-        'Please adjust your pythonpath before running this test: %s' % str(impe))
+        f'Please adjust your pythonpath before running this test: {str(impe)}'
+    )
 
 
 class FindInWorkspaceTest(unittest.TestCase):

@@ -74,12 +74,13 @@ def create_catkin_workspace(pth):
     # avoid copying tmp, as that may contain all of ros core
 
     def notest(folder, contents):
-        if folder.endswith('test'):
-            return ['tmp']
-        return []
+        return ['tmp'] if folder.endswith('test') else []
+
     shutil.copytree(CATKIN_DIR, catkin_dir, symlinks=True, ignore=notest)
-    assert (os.path.exists(pth + "/catkin/cmake/toplevel.cmake")), \
-        pth + "/catkin/cmake/toplevel.cmake"
+    assert os.path.exists(
+        f"{pth}/catkin/cmake/toplevel.cmake"
+    ), f"{pth}/catkin/cmake/toplevel.cmake"
+
     # workaround for current rosinstall creating flawed CMakelists
     workspace_cmake = os.path.join(pth, "CMakeLists.txt")
     if os.path.isfile(workspace_cmake):
@@ -178,24 +179,24 @@ class AbstractCatkinWorkspaceTest(unittest.TestCase):
             kwargs['CATKIN_DPKG_BUILDPACKAGE_FLAGS'] = '-d;-S;-us;-uc'
         for k, v in kwargs.items():
             print("~v^v~", k, v)
-            args += ["-D%s=%s" % (k, v)]
-        if not 'CMAKE_INSTALL_PREFIX' in kwargs:
+            args += [f"-D{k}={v}"]
+        if 'CMAKE_INSTALL_PREFIX' not in kwargs:
             if installdir is None:
                 installdir = self.installdir
-            args += ["-DCMAKE_INSTALL_PREFIX=%s" % (installdir)]
+            args += [f"-DCMAKE_INSTALL_PREFIX={installdir}"]
 
-        if not 'CMAKE_PREFIX_PATH' in kwargs:
+        if 'CMAKE_PREFIX_PATH' not in kwargs:
             if prefix_path is None:
                 prefix_path = self.installdir
-            args += ["-DCMAKE_PREFIX_PATH=%s" % (prefix_path)]
+            args += [f"-DCMAKE_PREFIX_PATH={prefix_path}"]
 
         if not os.path.isdir(this_builddir):
             os.makedirs(this_builddir)
         cmd = ["cmake", this_srcdir] + args
         o = expect(cmd, cwd=this_builddir)
         if (expect == succeed):
-            self.assertTrue(os.path.isfile(this_builddir + "/CMakeCache.txt"))
-            self.assertTrue(os.path.isfile(this_builddir + "/Makefile"))
+            self.assertTrue(os.path.isfile(f"{this_builddir}/CMakeCache.txt"))
+            self.assertTrue(os.path.isfile(f"{this_builddir}/Makefile"))
         return o
 
 

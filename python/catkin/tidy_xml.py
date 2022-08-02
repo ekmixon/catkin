@@ -84,7 +84,7 @@ def tidy_xml(filename):
         return False
 
     for match in _SAFE_XML_REGEX.finditer(data):
-        data = data[:match.start()] + '?' + data[match.end():]
+        data = f'{data[:match.start()]}?{data[match.end():]}'
 
     with open(filename, 'w') as fhand:
         fhand.write(data)

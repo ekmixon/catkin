@@ -7,7 +7,7 @@ try:
     import catkin.builder
 except ImportError as e:
     raise ImportError(
-        'Please adjust your pythonpath before running this test: %s' % str(e)
+        f'Please adjust your pythonpath before running this test: {str(e)}'
     )
 
 

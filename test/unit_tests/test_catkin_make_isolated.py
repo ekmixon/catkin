@@ -12,8 +12,9 @@ try:
     from catkin.builder import extract_cmake_and_make_arguments
 except ImportError as e:
     raise ImportError(
-        'Please adjust your pythonpath before running this test: %s' % str(e)
+        f'Please adjust your pythonpath before running this test: {str(e)}'
     )
+
 
 imp.load_source('catkin_make_isolated',
                 os.path.join(os.path.dirname(__file__),

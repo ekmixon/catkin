@@ -7,7 +7,9 @@ try:
     from catkin.tidy_xml import tidy_xml, _SAFE_XML_REGEX
 except ImportError as impe:
     raise ImportError(
-        'Please adjust your pythonpath before running this test: %s' % str(impe))
+        f'Please adjust your pythonpath before running this test: {str(impe)}'
+    )
+
 
 try:
     char = unichr

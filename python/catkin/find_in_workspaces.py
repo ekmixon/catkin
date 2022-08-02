@@ -67,15 +67,12 @@ def _get_valid_search_dirs(search_dirs, project):
         all_valid_search_dirs = set(valid_global_search_dirs).union(
             set(valid_project_search_dirs))
 
-        # check folder name is known at all
-        diff_dirs = set(search_dirs).difference(all_valid_search_dirs)
-        if len(diff_dirs) > 0:
+        if diff_dirs := set(search_dirs).difference(all_valid_search_dirs):
             raise ValueError('Unsupported search folders: ' +
                              ', '.join(['"%s"' % i for i in diff_dirs]))
-        # check foldername works with project arg
-        diff_dirs = set(search_dirs).difference(valid_search_dirs)
-        if len(diff_dirs) > 0:
-            msg = 'Searching %s a project can not be combined with the search folders:' % ('without' if project is None else 'for')
+        if diff_dirs := set(search_dirs).difference(valid_search_dirs):
+            msg = f"Searching {'without' if project is None else 'for'} a project can not be combined with the search folders:"
+
             raise ValueError(msg + ', '.join(['"%s"' % i for i in diff_dirs]))
     return search_dirs
 
@@ -147,8 +144,13 @@ def find_in_workspaces(search_dirs=None, project=None, path=None, _workspaces=No
                     for source_path in workspace_to_source_spaces[workspace]:
                         if source_path not in source_path_to_packages:
                             source_path_to_packages[source_path] = find_packages(source_path)
-                        matching_packages = [p for p, pkg in source_path_to_packages[source_path].items() if pkg.name == project]
-                        if matching_packages:
+                        if matching_packages := [
+                            p
+                            for p, pkg in source_path_to_packages[
+                                source_path
+                            ].items()
+                            if pkg.name == project
+                        ]:
                             p = source_path
                             if matching_packages[0] != os.curdir:
                                 p = os.path.join(p, matching_packages[0])

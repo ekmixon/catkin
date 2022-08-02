@@ -42,7 +42,12 @@ def get_cmake_path():
     relpath = os.path.join(os.path.dirname(__file__), '..', '..', 'cmake')
     if os.path.exists(relpath):
         return os.path.normpath(relpath)
-    paths = find_in_workspaces(['share'], 'catkin', first_matching_workspace_only=True, first_match_only=True)
-    if not paths:
+    if paths := find_in_workspaces(
+        ['share'],
+        'catkin',
+        first_matching_workspace_only=True,
+        first_match_only=True,
+    ):
+        return os.path.join(paths[0], 'cmake')
+    else:
         raise RuntimeError('Could not determine catkin cmake path')
-    return os.path.join(paths[0], 'cmake')

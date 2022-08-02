@@ -66,18 +66,22 @@ class SimpleUnstableTest(AbstractUnstableTest):
                             os.path.join(other_src_dir, 'common_msgs'))
             self.cmake(cwd=other_build_dir, srcdir=other_src_dir)
             succeed(MAKE_CMD, cwd=other_build_dir)
-            assert_exists(other_develspace_dir,
-                          PYTHON_INSTALL_PATH + '/nav_msgs/msg/_GridCells.py',
-                          'include/nav_msgs/GridCells.h')
+            assert_exists(
+                other_develspace_dir,
+                f'{PYTHON_INSTALL_PATH}/nav_msgs/msg/_GridCells.py',
+                'include/nav_msgs/GridCells.h',
+            )
+
 
             succeed(MAKE_CMD + ['install'], cwd=other_build_dir)
 
-            assert_exists(self.installdir,
-                          'include/geometry_msgs/PointStamped.h',
-                          PYTHON_INSTALL_PATH + '/geometry_msgs/msg/_PointStamped.py',
-                          'share/geometry_msgs/msg/PointStamped.msg',
-                          # 'share/typelibxml/geometry_msgs/PointStamped.xml',
-                          )
+            assert_exists(
+                self.installdir,
+                'include/geometry_msgs/PointStamped.h',
+                f'{PYTHON_INSTALL_PATH}/geometry_msgs/msg/_PointStamped.py',
+                'share/geometry_msgs/msg/PointStamped.msg',
+            )
+
         finally:
             # pass
             shutil.rmtree(other_root_dir)
@@ -109,33 +113,36 @@ class SimpleUnstableTest(AbstractUnstableTest):
             assert_exists(other_build_dir,
                           # 'bin/nolangs_exec',
                           'catkin_test/quux_user/bin/quux_srv-exec')
-            assert_exists(other_develspace_dir,
-                          PYTHON_INSTALL_PATH + '/a',
-                          # PYTHON_INSTALL_PATH + '/b',
-                          # PYTHON_INSTALL_PATH + '/c',
-                          # PYTHON_INSTALL_PATH + '/d',
-                          PYTHON_INSTALL_PATH + '/a/__init__.py',
-                          PYTHON_INSTALL_PATH + '/quux_msgs/__init__.py')
+            assert_exists(
+                other_develspace_dir,
+                f'{PYTHON_INSTALL_PATH}/a',
+                f'{PYTHON_INSTALL_PATH}/a/__init__.py',
+                f'{PYTHON_INSTALL_PATH}/quux_msgs/__init__.py',
+            )
+
 
             # "DESTDIR="
             succeed(MAKE_CMD + ['install'],
                     cwd=other_build_dir)
 
-            assert_exists(other_install_dir,
-                          'lib/pkgconfig/a.pc',
-                          'lib/pkgconfig/b.pc',
-                          'lib/pkgconfig/c.pc',
-                          'lib/pkgconfig/d.pc',
-                          'lib/pkgconfig/quux_msgs.pc',
-                          PYTHON_INSTALL_PATH + '/a/__init__.py',
-                          PYTHON_INSTALL_PATH + '/quux_msgs/__init__.py')
+            assert_exists(
+                other_install_dir,
+                'lib/pkgconfig/a.pc',
+                'lib/pkgconfig/b.pc',
+                'lib/pkgconfig/c.pc',
+                'lib/pkgconfig/d.pc',
+                'lib/pkgconfig/quux_msgs.pc',
+                f'{PYTHON_INSTALL_PATH}/a/__init__.py',
+                f'{PYTHON_INSTALL_PATH}/quux_msgs/__init__.py',
+            )
 
-            #
-            #  make sure python imports work
-            #
 
-            # succeed([other_build_dir + '/env.sh", 'python -c 'import a'"])
-            # succeed([other_build_dir + '/env.sh', "python -c 'import b'"])
+                #
+                #  make sure python imports work
+                #
+
+                # succeed([other_build_dir + '/env.sh", 'python -c 'import a'"])
+                # succeed([other_build_dir + '/env.sh', "python -c 'import b'"])
         finally:
             # pass
             shutil.rmtree(other_root_dir)

@@ -26,11 +26,14 @@ def parse_args(args=sys.argv[1:]):
                                        'lib': 'Search in "lib" folder',
                                        'libexec': 'Search in "lib/PROJECT" folder',
                                        'share': 'Search in "share(/PROJECT)" folder (and source of PROJECT if not installed)'}.items():
-        group.add_argument('--%s' % foldername,
-                           dest='install_folders',
-                           action='append_const',
-                           const=foldername,
-                           help=subfolder_help)
+        group.add_argument(
+            f'--{foldername}',
+            dest='install_folders',
+            action='append_const',
+            const=foldername,
+            help=subfolder_help,
+        )
+
     return parser.parse_args(args=args)
 
 

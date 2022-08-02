@@ -80,21 +80,15 @@ def generate_rst(files, skip_private=False, skip_undocumented=False):
                     last_block.append(line.rstrip('\n'))
             else:
                 declaration = re.match(r'[a-zA-Z]+ *\([a-zA-Z0-9_ ]+\)', line)
-                if declaration is None:
-                    last_block = []
-                    last_block_public = False
-                else:
+                if declaration is not None:
                     tokens = line.split('(')
                     dec_type = tokens[0].strip()
                     dec_args = tokens[1].strip().rstrip(')').split(' ')
 
-                    if dec_type == 'function' or dec_type == 'macro':
-                        rst = []
+                    if dec_type in ['function', 'macro']:
                         # directives defined in catkin-sphinx
                         dec_line = '.. _`%s_ref`:\n\n`%s`\n%s\n\n.. cmake:macro:: %s(%s)' % (dec_args[0], dec_args[0], '~' * (len(dec_args[0]) + 2), dec_args[0], ', '.join(dec_args[1:]))
-                        rst.append(dec_line)
-                        rst.append('')
-                        rst.append(' *[%s defined in %s]*' % (dec_type, relpath))
+                        rst = [dec_line, '', f' *[{dec_type} defined in {relpath}]*']
                         if last_block:
                             rst.append('')
                             rst.extend(last_block)
@@ -108,44 +102,55 @@ def generate_rst(files, skip_private=False, skip_undocumented=False):
                         else:
                             undocumented[dec_args[0]] = rst
 
-                    last_block = []
-                    last_block_public = False
+                last_block_public = False
+                last_block = []
+    rst = [
+        'Extracted CMake API reference',
+        '=============================',
+        'This page was auto-generated from cmake source files using %s\n'
+        % os.path.basename(__file__),
+        '.. ' + '!' * 70,
+        '.. !!!!!! Auto-generated file, do not modify',
+        '.. ' + '!' * 70,
+        '',
+        '.. contents::',
+        '   :local:',
+        '',
+        '',
+        'Public CMake functions / macros',
+        '-------------------------------',
+        '',
+    ]
 
-    rst = ['Extracted CMake API reference',
-           '=============================']
-    rst.append('This page was auto-generated from cmake source files using %s\n' % os.path.basename(__file__))
-    rst.append('.. ' + '!' * 70)
-    rst.append('.. !!!!!! Auto-generated file, do not modify')
-    rst.append('.. ' + '!' * 70)
-    rst.append('')
-    rst.append('.. contents::')
-    rst.append('   :local:')
-    rst.append('')
-    rst.append('')
-    rst.append('Public CMake functions / macros')
-    rst.append('-------------------------------')
-    rst.append('')
-    for name in sorted(public.keys()):
-        rst.append(' * :cmake:macro:`%s`' % name)
+    rst.extend(f' * :cmake:macro:`{name}`' for name in sorted(public.keys()))
     for name in sorted(public.keys()):
         rst.append('')
         rst.extend(public[name])
     rst.append('')
 
     if not skip_private:
-        rst.append('Non-public CMake functions / macros')
-        rst.append('-----------------------------------')
-        rst.append('')
-        for name in sorted(documented.keys()):
-            rst.append(' * :cmake:macro:`%s`' % name)
+        rst.extend(
+            (
+                'Non-public CMake functions / macros',
+                '-----------------------------------',
+                '',
+            )
+        )
+
+        rst.extend(f' * :cmake:macro:`{name}`' for name in sorted(documented.keys()))
         for name in sorted(documented.keys()):
             rst.append('')
             rst.extend(documented[name])
         rst.append('')
 
     if not skip_undocumented:
-        rst.append('Not documented CMake functions / macros')
-        rst.append('---------------------------------------')
+        rst.extend(
+            (
+                'Not documented CMake functions / macros',
+                '---------------------------------------',
+            )
+        )
+
         for name in sorted(undocumented.keys()):
             rst.append('')
             rst.extend(undocumented[name])
@@ -163,16 +168,18 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    exclusions = '{}/.sphinx_exclusions.json'.format(args.path)
+    exclusions = f'{args.path}/.sphinx_exclusions.json'
     excluded_files = []
     if os.path.exists(exclusions):
         try:
             with open(exclusions, 'r') as f:
                 excluded_files = json.load(f)
         except (TypeError, ValueError) as err:
-            print('unable to load exclusions\nerr={}\n'
-                  'make sure the file <{}> is valid json or remove it'.
-                  format(err, exclusions), file=sys.stderr)
+            print(
+                f'unable to load exclusions\nerr={err}\nmake sure the file <{exclusions}> is valid json or remove it',
+                file=sys.stderr,
+            )
+
             sys.exit(-1)
 
     cmake_files = crawl_for_cmake(args.path, excluded_files)

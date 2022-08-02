@@ -15,7 +15,8 @@ try:
     import catkin.test_results as catkin_test_results
 except ImportError as impe:
     raise ImportError(
-        'Please adjust your pythonpath before running this test: %s' % str(impe))
+        f'Please adjust your pythonpath before running this test: {str(impe)}'
+    )
 
 
 class TestResultsTest(unittest.TestCase):

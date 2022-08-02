@@ -46,9 +46,11 @@ def get_workspaces():
     # get all cmake prefix paths
     env_name = 'CMAKE_PREFIX_PATH'
     paths = [path for path in os.environ.get(env_name, '').split(os.pathsep) if path]
-    # remove non-workspace paths
-    workspaces = [path for path in paths if os.path.isfile(os.path.join(path, CATKIN_MARKER_FILE))]
-    return workspaces
+    return [
+        path
+        for path in paths
+        if os.path.isfile(os.path.join(path, CATKIN_MARKER_FILE))
+    ]
 
 
 def get_source_paths(workspace):

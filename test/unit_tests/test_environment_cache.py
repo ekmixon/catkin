@@ -11,7 +11,8 @@ try:
     from catkin.environment_cache import _append_header, _set_variable, _append_comment, _is_not_windows, generate_environment_script
 except ImportError as impe:
     raise ImportError(
-        'Please adjust your pythonpath before running this test: %s' % str(impe))
+        f'Please adjust your pythonpath before running this test: {str(impe)}'
+    )
 
 
 class PlatformTest(unittest.TestCase):
